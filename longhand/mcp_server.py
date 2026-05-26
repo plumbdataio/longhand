@@ -214,7 +214,7 @@ async def list_tools() -> list[Tool]:
                     "file_path_contains": {"type": "string", "description": "Filter to events with an explicit file_path containing this string (tool_call/tool_result events only — user messages won't have file_path metadata)"},
                     "max_chars": {"type": "integer", "default": 12000, "description": "Max total output characters (default 12000). Set higher if you need full content."},
                 },
-                "required": ["query"],
+                "required": ["query", "session_id"],
             },
             outputSchema={
                 "type": "array",
@@ -430,9 +430,9 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Exact file path to look up"},
-                    "session_id": {"type": "string", "description": "Optional: limit to a single session (prefix match)"},
+                    "session_id": {"type": "string", "description": "Current CC session ID — required to scope file history to your own session"},
                 },
-                "required": ["file_path"],
+                "required": ["file_path", "session_id"],
             },
             outputSchema={
                 "type": "array",
@@ -490,10 +490,11 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Natural language question"},
+                    "session_id": {"type": "string", "description": "Current CC session ID — required to scope recall to your own session"},
                     "max_episodes": {"type": "integer", "default": 5, "description": "Max episodes to return"},
                     "max_chars": {"type": "integer", "default": 16000, "description": "Max total output characters"},
                 },
-                "required": ["query"],
+                "required": ["query", "session_id"],
             },
             annotations=_READ_ONLY,
         ),
@@ -608,6 +609,7 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
+                    "session_id": {"type": "string", "description": "Current CC session ID — required to scope episode search to your own session"},
                     "project_ids": {"type": "array", "items": {"type": "string"}, "description": "Optional: filter to one or more project_ids"},
                     "since": {"type": "string", "description": "ISO timestamp — only episodes after this date"},
                     "until": {"type": "string", "description": "ISO timestamp — only episodes before this date"},
@@ -615,6 +617,7 @@ async def list_tools() -> list[Tool]:
                     "has_fix": {"type": "boolean", "default": True, "description": "If True, return only episodes that have a resolved fix"},
                     "limit": {"type": "integer", "default": 20, "description": "Max results (default 20, capped at 1000)"},
                 },
+                "required": ["session_id"],
             },
             outputSchema={
                 "type": "array",
@@ -708,12 +711,12 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Commit message substring, hash prefix, or branch name"},
-                    "session_id": {"type": "string", "description": "Optional: scope to a single session (prefix match)"},
+                    "session_id": {"type": "string", "description": "Current CC session ID — required to scope commit search to your own session"},
                     "operation_type": {"type": "string", "description": "Filter by operation type (default: all)"},
                     "limit": {"type": "integer", "default": 20, "description": "Max results (default 20, capped at 1000)"},
                     "max_chars": {"type": "integer", "default": 12000, "description": "Max output characters"},
                 },
-                "required": ["query"],
+                "required": ["query", "session_id"],
             },
             outputSchema={
                 "type": "array",
