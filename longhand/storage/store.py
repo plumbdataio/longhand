@@ -54,7 +54,13 @@ class LonghandStore:
         self.data_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
 
         self.sqlite = SQLiteStore(self.data_dir / "longhand.db")
-        self.vectors = VectorStore(self.data_dir / "chroma")
+        self._vectors: VectorStore | None = None
+
+    @property
+    def vectors(self) -> VectorStore:
+        if self._vectors is None:
+            self._vectors = VectorStore(self.data_dir / "chroma")
+        return self._vectors
 
     def ingest_session(
         self,

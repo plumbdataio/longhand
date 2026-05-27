@@ -216,11 +216,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["query", "session_id"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Array of matching events ordered by semantic relevance.",
-                "items": _EVENT_ROW_SCHEMA,
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -246,18 +241,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["session_id", "query"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Array of matches; each match wraps the matched event plus the surrounding window.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "match": _EVENT_ROW_SCHEMA,
-                        "context_before": {"type": "array", "items": _EVENT_ROW_SCHEMA},
-                        "context_after": {"type": "array", "items": _EVENT_ROW_SCHEMA},
-                    },
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -282,24 +265,6 @@ async def list_tools() -> list[Tool]:
                     "project": {"type": "string", "description": "Filter by project path substring (e.g. 'longhand', 'bsoi')"},
                     "limit": {"type": "integer", "default": 50, "description": "Max results (default 50, capped at 1000)"},
                 },
-            },
-            outputSchema={
-                "oneOf": [
-                    {
-                        "type": "array",
-                        "description": "Plain list of session rows when no staleness was detected.",
-                        "items": _SESSION_ROW_SCHEMA,
-                    },
-                    {
-                        "type": "object",
-                        "description": "Staleness envelope when on-disk transcripts exceed indexed count.",
-                        "properties": {
-                            "stale": {"type": "boolean"},
-                            "stale_reason": {"type": "string"},
-                            "sessions": {"type": "array", "items": _SESSION_ROW_SCHEMA},
-                        },
-                    },
-                ],
             },
             annotations=_READ_ONLY,
         ),
@@ -331,17 +296,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["session_id"],
             },
-            outputSchema={
-                "type": "object",
-                "description": "Wrapped result with pagination metadata + the events array.",
-                "properties": {
-                    "session_id": {"type": "string"},
-                    "returned": {"type": "integer"},
-                    "offset": {"type": ["integer", "null"]},
-                    "tail": {"type": ["integer", "null"]},
-                    "events": {"type": "array", "items": _EVENT_ROW_SCHEMA},
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -366,11 +320,6 @@ async def list_tools() -> list[Tool]:
                     "max_chars": {"type": "integer", "default": 16000, "description": "Max total output characters"},
                 },
                 "required": ["session_id"],
-            },
-            outputSchema={
-                "type": "array",
-                "description": "Events in reverse chronological order (most recent first).",
-                "items": _EVENT_ROW_SCHEMA,
             },
             annotations=_READ_ONLY,
         ),
@@ -398,19 +347,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["session_id", "file_path"],
             },
-            outputSchema={
-                "type": "object",
-                "description": "Reconstructed file state and the metadata about how it was built.",
-                "properties": {
-                    "file_path": {"type": "string"},
-                    "session_id": {"type": "string"},
-                    "at_event_id": {"type": ["string", "null"]},
-                    "at_timestamp": {"type": "string"},
-                    "source": {"type": "string", "description": "Origin of the base content (write, initial_read, etc.)"},
-                    "edits_applied": {"type": "integer"},
-                    "content": {"type": "string", "description": "Full reconstructed file content at the requested point in time."},
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -434,11 +370,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["file_path", "session_id"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Chronological list of edit events for the file.",
-                "items": _EVENT_ROW_SCHEMA,
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -456,23 +387,6 @@ async def list_tools() -> list[Tool]:
                 "Takes no parameters; output is a single flat object."
             ),
             inputSchema={"type": "object", "properties": {}},
-            outputSchema={
-                "type": "object",
-                "description": "Flat key-value snapshot of Longhand's local store.",
-                "properties": {
-                    "total_sessions": {"type": "integer"},
-                    "total_events": {"type": "integer"},
-                    "total_tool_calls": {"type": "integer"},
-                    "total_file_edits": {"type": "integer"},
-                    "total_thinking_blocks": {"type": "integer"},
-                    "total_vectors": {"type": "integer"},
-                    "total_projects": {"type": "integer"},
-                    "total_episodes": {"type": "integer"},
-                    "resolved_episodes": {"type": "integer"},
-                    "unresolved_episodes": {"type": "integer"},
-                    "data_dir": {"type": "string"},
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -550,17 +464,6 @@ async def list_tools() -> list[Tool]:
                     },
                 },
             },
-            outputSchema={
-                "type": "object",
-                "description": "Counts of fully-indexed, null-project, missing, ingested, and errors.",
-                "properties": {
-                    "fully_indexed": {"type": "integer"},
-                    "null_project": {"type": "integer"},
-                    "missing": {"type": "integer"},
-                    "ingested": {"type": "integer"},
-                    "errors": {"type": "integer"},
-                },
-            },
             annotations=_RECONCILE_HINTS,
         ),
         Tool(
@@ -578,21 +481,6 @@ async def list_tools() -> list[Tool]:
                     "top_k": {"type": "integer", "default": 5, "description": "Max project matches to return"},
                 },
                 "required": ["query"],
-            },
-            outputSchema={
-                "type": "array",
-                "description": "Project candidates with match reasons.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "project_id": {"type": "string"},
-                        "display_name": {"type": ["string", "null"]},
-                        "canonical_path": {"type": ["string", "null"]},
-                        "category": {"type": ["string", "null"]},
-                        "score": {"type": ["number", "null"]},
-                        "reasons": {"type": "array", "items": {"type": "string"}},
-                    },
-                },
             },
             annotations=_READ_ONLY,
         ),
@@ -619,23 +507,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["session_id"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Raw episode rows in reverse chronological order.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "episode_id": {"type": "string"},
-                        "project_id": {"type": ["string", "null"]},
-                        "session_id": {"type": ["string", "null"]},
-                        "started_at": {"type": ["string", "null"]},
-                        "resolved_at": {"type": ["string", "null"]},
-                        "summary": {"type": ["string", "null"]},
-                        "fix_summary": {"type": ["string", "null"]},
-                        "has_fix": {"type": "boolean"},
-                    },
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -652,18 +523,6 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {"episode_id": {"type": "string", "description": "Exact episode_id from find_episodes or recall"}},
                 "required": ["episode_id"],
-            },
-            outputSchema={
-                "type": "object",
-                "description": "Episode metadata, referenced events, diff, and post-fix file state.",
-                "properties": {
-                    "episode_id": {"type": "string"},
-                    "summary": {"type": ["string", "null"]},
-                    "fix_summary": {"type": ["string", "null"]},
-                    "events": {"type": "array", "items": _EVENT_ROW_SCHEMA},
-                    "diff": {"type": ["string", "null"]},
-                    "file_state_after_fix": {"type": ["string", "null"]},
-                },
             },
             annotations=_READ_ONLY,
         ),
@@ -691,11 +550,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["session_id"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Git operations in chronological order.",
-                "items": _GIT_OP_ROW_SCHEMA,
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -717,11 +571,6 @@ async def list_tools() -> list[Tool]:
                     "max_chars": {"type": "integer", "default": 12000, "description": "Max output characters"},
                 },
                 "required": ["query", "session_id"],
-            },
-            outputSchema={
-                "type": "array",
-                "description": "Matching git operations across sessions.",
-                "items": _GIT_OP_ROW_SCHEMA,
             },
             annotations=_READ_ONLY,
         ),
@@ -751,22 +600,6 @@ async def list_tools() -> list[Tool]:
                     },
                 },
             },
-            outputSchema={
-                "type": "array",
-                "description": "Inferred project summaries; verbose mode adds aliases/keywords/languages.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "project_id": {"type": "string"},
-                        "display_name": {"type": ["string", "null"]},
-                        "canonical_path": {"type": ["string", "null"]},
-                        "category": {"type": ["string", "null"]},
-                        "session_count": {"type": ["integer", "null"]},
-                        "total_edits": {"type": ["integer", "null"]},
-                        "last_seen": {"type": ["string", "null"]},
-                    },
-                },
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -792,11 +625,6 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["project_id"],
             },
-            outputSchema={
-                "type": "array",
-                "description": "Sessions for the project, each enriched with outcome + summary.",
-                "items": _SESSION_ROW_SCHEMA,
-            },
             annotations=_READ_ONLY,
         ),
         Tool(
@@ -814,11 +642,6 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "limit": {"type": "integer", "default": 50, "description": "Max plans to return (default 50, capped at 1000)"},
                 },
-            },
-            outputSchema={
-                "type": "array",
-                "description": "Plan write events ordered newest-first.",
-                "items": _EVENT_ROW_SCHEMA,
             },
             annotations=_READ_ONLY,
         ),
